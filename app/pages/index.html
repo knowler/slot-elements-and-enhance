@@ -1,0 +1,167 @@
+<style global>
+  * {
+    box-sizing: border-box;
+  }
+
+  :root {
+    font-family: system-ui;
+    font-feature-settings: "ss06";
+    line-height: 1.5;
+  }
+
+  body {
+    margin: 0;
+    padding: 2rem;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-variation-settings: "wdth" 120;
+    margin-block: 0;
+
+    &:not(:first-child) {
+      margin-block-start: 1.5em;
+    }
+
+    + {
+      margin-block-start: 0.8em;
+    }
+  }
+
+  p {
+    margin-block: 1.5rem;
+    max-inline-size: 48ch;
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: monospace, monospace;
+    font-size: 0.95em;
+  }
+
+  :not(pre):has(> code) code {
+    padding-inline: 0.3em;
+    background-color: color-mix(in hsl, Canvas, CanvasText 10%);
+    border-radius: 0.25em;
+  }
+
+  main * + * {
+    margin-block-start: 1rem;
+  }
+
+  .demo {
+    max-inline-size: 60ch;
+  }
+</style>
+<main>
+  <h1><code>&lt;slot&gt;</code> elements and Enhance</h1>
+  <h2>Difference #1: <code>&lt;slot&gt;</code> elements can be styled</h2>
+  <h3>Enhance Element <code>./src/elements/enhance-element.mjs</code></h3>
+  <enhance-element class="demo">
+    <div>Slotted content</div>
+  </enhance-element>
+  <h3>Enhance Component <code>./src/components/enhance-component.mjs</code></h3>
+  <enhance-component class="demo">
+    <div>Slotted content</div>
+  </enhance-component>
+  <h3>Element that uses the Shadow DOM</h3>
+  <p>If we just style the host element, then Enhance does match element using the Shadow DOM visually.</p>
+  <shadow-element class="demo">
+    <template shadowrootmode="open">
+      <style>
+        :host {
+          position: relative;
+          display: block;
+          border: 0.25rem dotted DodgerBlue;
+          padding: 1rem;
+          margin-block-start: 0.75rem;
+
+          &::before {
+            content: "Host element";
+            position: absolute;
+            background-color: Canvas;
+            color: DodgerBlue;
+            font-weight: 700;
+            font-variation-settings: "wdth" 150;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            inset-block-start: -1em;
+            padding-inline: 0.5rem;
+          }
+        }
+      </style>
+      <slot></slot>
+    </template>
+    <div>Slotted content</div>
+  </shadow-element>
+  <p>However, slot elements are stylable. <code>display: contents</code> is just the default.</p>
+  <shadow-element class="demo">
+    <template shadowrootmode="open">
+      <style>
+        :host {
+          position: relative;
+          display: block;
+          border: 0.25rem dotted DodgerBlue;
+          padding: 1rem;
+          margin-block-start: 0.75rem;
+
+          &::before {
+            content: "Host element";
+            position: absolute;
+            background-color: Canvas;
+            color: DodgerBlue;
+            font-weight: 700;
+            font-variation-settings: "wdth" 150;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            inset-block-start: -1em;
+            padding-inline: 0.5rem;
+          }
+        }
+
+        slot {
+          position: relative;
+          display: block;
+          border: 0.25rem dotted DeepPink;
+          padding: 1rem;
+          margin-block-start: 0.75rem;
+
+          &::before {
+            content: "Slot element";
+            position: absolute;
+            background-color: Canvas;
+            color: DeepPink;
+            font-weight: 700;
+            font-variation-settings: "wdth" 150;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            inset-block-start: -1em;
+            padding-inline: 0.5rem;
+          }
+        }
+      </style>
+      <slot></slot>
+    </template>
+    <div>Slotted content</div>
+  </shadow-element>
+  <p>But who would style a slot element? Well… Chrome does for its <code>&lt;details&gt;</code> element.</p>
+  <details>
+    <summary>Slotted content</summary>
+    <p>Slotted content</p>
+  </details>
+  <p>
+    Notice that when the element is closed, Chrome adds <code>display:
+      block; content-visibility: hidden;</code> as inline styles on the
+    <code>#details-content</code> slot element.
+  </p>
+  <p>
+    As a custom element author, I’ve styled <code>&lt;slot&gt;</code>
+    without much thought. Sometimes I’ll even make a slot a
+    <code>part</code> so that consumers can style it.
+  </p>
+  <h2>So, what do you do?</h2>
+  <p>
+    I think either way you go, you will lose something. It doesn’t hurt
+    to leave the <code>&lt;slot&gt;</code> elements in the light DOM
+    markup.
+  </p>
+</main>
