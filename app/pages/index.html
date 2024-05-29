@@ -14,9 +14,11 @@
     padding: 2rem;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  main :is(h1, h2, h3, h4, h5, h6):not(shadow-element *) {
     font-variation-settings: "wdth" 120;
     margin-block: 0;
+    max-inline-size: 40ch;
+    text-wrap: balance;
 
     &:not(:first-child) {
       margin-block-start: 1.5em;
@@ -27,9 +29,9 @@
     }
   }
 
-  p {
+  p:where(:not(shadow-element p)) {
     margin-block: 1.5rem;
-    max-inline-size: 48ch;
+    max-inline-size: 64ch;
     line-height: 1.6;
   }
 
@@ -44,7 +46,7 @@
     border-radius: 0.25em;
   }
 
-  main * + * {
+  main > * + * {
     margin-block-start: 1rem;
   }
 
@@ -155,13 +157,141 @@
   </p>
   <p>
     As a custom element author, I’ve styled <code>&lt;slot&gt;</code>
-    without much thought. Sometimes I’ll even make a slot a
-    <code>part</code> so that consumers can style it.
+    without much thought as it’s nice to not need an extra element to
+    wrap it. Sometimes I’ll even make a slot a <code>part</code> so that
+    consumers can style it too.
+  </p>
+  <h2>
+    Difference #2: <code>&lt;slot&gt;</code> elements allow for
+    continued “slotting” after the page has rendered
+  </h2>
+  <aside>
+    <style>
+      @scope {
+        :scope {
+          margin-block: 1rem;
+          padding: 1rem;
+          background-color: color-mix(in hsl, Canvas, CanvasText 5%);
+          border-radius: 0.5rem;
+          inline-size: fit-content;
+        }
+
+        p {
+          margin-block: 0;
+        }
+      }
+    </style>
+    <p>
+      If you have JavaScript enabled, there will be a few buttons with
+      actions you can make to modify the light DOM children of the
+      following element. Make sure to open devtools to see what’s
+      happening.
+    </p>
+  </aside>
+  <slots-are-alive>
+    <template shadowrootmode="open">
+      <style>
+        :host(:not(:defined)) {
+          display: none;
+        }
+      </style>
+      <button name=update-title type=button>Update Title</button>
+      <button name=add-subtitle type=button>Add subtitle</button>
+      <button name=remove-subtitle type=button>Remove subtitle</button>
+      <button name=add-content type=button>Add content</button>
+    </template>
+  </slots-are-alive>
+  <script type="module">
+    customElements.define("slots-are-alive", class extends HTMLElement {
+      constructor() {
+        super();
+
+        if (!this.shadowRoot) throw "Missing template";
+
+        this.shadowRoot.addEventListener("click", this);
+      }
+
+      handleEvent(event) {
+        switch (event.target.name) {
+          case "update-title":
+            const updatedTitleElement = this.ownerDocument.createElement("h4");
+            updatedTitleElement.slot = "title";
+            updatedTitleElement.textContent = "New Title";
+            window.slotsAreAlive.shadowRoot.querySelector("slot[name=title]")?.assignedElements().at(0)?.remove();
+            window.slotsAreAlive.append(updatedTitleElement);
+            event.target.disabled = true;
+            break;
+          case "add-subtitle":
+            const addedSubtitleElement = this.ownerDocument.createElement("p");
+            addedSubtitleElement.slot = "subtitle";
+            addedSubtitleElement.textContent = "New subtitle";
+            window.slotsAreAlive.appendChild(addedSubtitleElement);
+            break;
+          case "remove-subtitle":
+            window.slotsAreAlive.shadowRoot.querySelector("slot[name=subtitle]")?.assignedElements().at(-1)?.remove();
+            break;
+          case "add-content":
+            const addedContentElement = this.ownerDocument.createElement("p");
+            addedContentElement.textContent = "New content";
+            window.slotsAreAlive.appendChild(addedContentElement);
+            break;
+        }
+      }
+    });
+  </script>
+  <shadow-element id="slotsAreAlive" class="demo">
+    <template shadowrootmode="open">
+      <style>
+        :host {
+          display: block;
+          border: 0.25em dotted DeepPink;
+          padding: 1rem;
+        }
+
+        hgroup {
+          font-size: 1.25rem;
+          font-variation-settings: "wdth" 110;
+          display: grid;
+          gap: 0.25rem;
+        }
+
+        slot[name]::slotted(*) {
+          margin-block: 0;
+        }
+      </style>
+      <article>
+        <hgroup>
+          <slot name="title"></slot>
+          <slot name="subtitle"></slot>
+        </hgroup>
+        <slot></slot>
+      </article>
+    </template>
+    <h3 slot=title>Example Title</h3>
+    <p slot=subtitle>Subtitle</p>
+    <p>Article content…</p>
+  </shadow-element>
+  <p>
+    From what I understand Enhance components do not afford this
+    capability. The only way to achieve it is with attributes which is
+    not the purpose of the concern I’m highlighting.
   </p>
   <h2>So, what do you do?</h2>
   <p>
-    I think either way you go, you will lose something. It doesn’t hurt
-    to leave the <code>&lt;slot&gt;</code> elements in the light DOM
-    markup.
+    Keeping the <code>&lt;slot&gt;</code> elements will more accurately
+    reflect the <i>composed tree</i>, but some might think it to be
+    unwise to keep <code>&lt;slot&gt</code> elements in the light DOM
+    where they have no extra purpose in case the Web platform decides to
+    add some extra meaning to them for the light DOM.
+  </p>
+  <p>
+    Keeping the elements could also provide a false impression of what
+    the template might have started as. If one was to say, copy the
+    Enhance element’s tree as a template for the shadow DOM, you might
+    potentially have 
+  </p>
+  <p>
+    In either case, mimicking the Shadow DOM’s templating with a single
+    tree will result in content-loss.
   </p>
 </main>
